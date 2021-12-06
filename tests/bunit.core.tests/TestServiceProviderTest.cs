@@ -12,12 +12,7 @@ public partial class TestServiceProviderTest
 
 	private class DummyServiceWithDependencyOnAnotherDummyService
 	{
-		private readonly AnotherDummyService anotherDummyService;
-
-		public DummyServiceWithDependencyOnAnotherDummyService(AnotherDummyService anotherDummyService)
-		{
-			this.anotherDummyService = anotherDummyService;
-		}
+		public DummyServiceWithDependencyOnAnotherDummyService(AnotherDummyService anotherDummyService) { }
 	}
 
 	private class FallbackServiceProvider : IServiceProvider
@@ -32,15 +27,16 @@ public partial class TestServiceProviderTest
 
 	private class DummyComponentWhichRequiresDummyService : ComponentBase
 	{
-		public DummyComponentWhichRequiresDummyService()
-		{
-		}
+		[Inject] public DummyService Service { get; set; }		
+	}
 
-		private DummyService service;
-		[Inject] public DummyService Service
+	private sealed class DisposableService : IDisposable
+	{
+		public bool IsDisposed { get; private set; }
+
+		public void Dispose()
 		{
-			get => service;
-			set => service = value;
+			IsDisposed = true;
 		}
 	}
 
@@ -271,6 +267,7 @@ public partial class TestServiceProviderTest
 		};
 		sut.AddSingleton<DummyServiceWithDependencyOnAnotherDummyService>();
 		var action = () => sut.GetRequiredService<DummyServiceWithDependencyOnAnotherDummyService>();
+
 		action.ShouldThrow<AggregateException>("Some services are not able to be constructed (Error while validating the service descriptor");
 	}
 
@@ -284,7 +281,9 @@ public partial class TestServiceProviderTest
 			ValidateScopes = true
 		};
 		sut.AddSingleton<DummyServiceWithDependencyOnAnotherDummyService>();
+
 		var result = sut.GetRequiredService<DummyServiceWithDependencyOnAnotherDummyService>();
+
 		result.ShouldNotBeNull();
 	}
 
@@ -293,19 +292,10 @@ public partial class TestServiceProviderTest
 	{
 		using var sut = new TestServiceProvider();
 		sut.AddSingleton<DummyServiceWithDependencyOnAnotherDummyService>();
+
 		var result = sut.GetRequiredService<DummyServiceWithDependencyOnAnotherDummyService>();
+
 		result.ShouldNotBeNull();
 	}
-
 #endif
-
-	private sealed class DisposableService : IDisposable
-	{
-		public bool IsDisposed { get; private set; }
-
-		public void Dispose()
-		{
-			IsDisposed = true;
-		}
-	}
 }
