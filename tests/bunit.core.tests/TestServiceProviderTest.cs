@@ -27,17 +27,14 @@ public partial class TestServiceProviderTest
 
 	private class DummyComponentWhichRequiresDummyService : ComponentBase
 	{
-		[Inject] public DummyService Service { get; set; }		
+		[Inject] public DummyService Service { get; set; }
 	}
 
 	private sealed class DisposableService : IDisposable
 	{
 		public bool IsDisposed { get; private set; }
 
-		public void Dispose()
-		{
-			IsDisposed = true;
-		}
+		public void Dispose() => IsDisposed = true;
 	}
 
 	[Fact(DisplayName = "Provider initialized without a service collection has zero services by default")]
@@ -255,7 +252,6 @@ public partial class TestServiceProviderTest
 		disposable.IsDisposed.ShouldBeTrue();
 	}
 
-#if (NET6_0_OR_GREATER)
 	[Fact(DisplayName = "Validates that all dependencies can be created when the first service is requested, if ServiceProviderOptions.ValidateOnBuild is true")]
 	public void Test035()
 	{
@@ -280,9 +276,10 @@ public partial class TestServiceProviderTest
 			ValidateOnBuild = false,
 			ValidateScopes = true
 		};
+		sut.AddSingleton<DummyService>();
 		sut.AddSingleton<DummyServiceWithDependencyOnAnotherDummyService>();
 
-		var result = sut.GetRequiredService<DummyServiceWithDependencyOnAnotherDummyService>();
+		var result = sut.GetRequiredService<DummyService>();
 
 		result.ShouldNotBeNull();
 	}
@@ -291,11 +288,11 @@ public partial class TestServiceProviderTest
 	public void Test037()
 	{
 		using var sut = new TestServiceProvider();
+		sut.AddSingleton<DummyService>();
 		sut.AddSingleton<DummyServiceWithDependencyOnAnotherDummyService>();
 
-		var result = sut.GetRequiredService<DummyServiceWithDependencyOnAnotherDummyService>();
+		var result = sut.GetRequiredService<DummyService>();
 
 		result.ShouldNotBeNull();
 	}
-#endif
 }
